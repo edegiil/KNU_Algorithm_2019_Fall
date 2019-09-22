@@ -1,9 +1,11 @@
-# KNU_DataStructure_COMP319_2018_Fall
+# KNU_Algorithm_COMP319_2019_Fall
 ### AUTHOR 
 > wingtree </br>
 
 ### Professor
 > Giljin Jang
 
+### Index
 * 01_binarySearch </br>
-Basic C review
+binary search
+- HW1: ascending order sorting
