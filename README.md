@@ -7,5 +7,10 @@
 
 ### Index
 * 01_binarySearch </br>
-binary search
-- HW1: ascending order sorting
+    - HW1: ascending order sorting
+
+* 02_sorting </br>
+    - HW2 </br>
+      selection sort with linked list </br>
+      merge sort with array </br>
+      merge sort with linked list </br>
