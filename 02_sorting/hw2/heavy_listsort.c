@@ -284,50 +284,88 @@ void savekeys_textfile_linkedlist( const char outfile[],
 NODE* list_insertion_sort ( NODE* head )
 {
   NODE* sorted_head = NULL;
-  NODE* sorted_tail = NULL;
 
-  NODE* pos = head;
-  NODE* temp;
+  // way 1 - time 8s
+  // NODE* sorted_tail = NULL;
 
-  while (pos != NULL) {
-    NODE* cur = head;
-    NODE* least = head;
-    NODE* buffer = head;
+  // while (head) {
+  //   NODE* cur = head;
+  //   NODE* least = head;
+  //   NODE* buffer = head;
 
-    // find minimum value node
-    while (cur != NULL) {
-      if (cur->key < least->key) {
-        least = cur;
-        buffer = temp;
-      }
-      if (cur->next && cur->next->key < least->key) {
-        temp = cur;
-      }
-      // printf("cur: %ld least: %ld buffer: %ld\n", cur->key, least->key, buffer->key);
-      cur = cur->next;
-    }
+  //   // find minimum value node
+  //   while (cur) {
+  //     if (cur->key < least->key) {
+  //       least = cur;
+  //       // buffer = temp;
+  //     }
+  //     if (cur->next && cur->next->key < least->key) {
+  //       // temp = cur;
+  //       buffer = cur;
+  //     }
+  //     // printf("cur: %ld least: %ld buffer: %ld\n", cur->key, least->key, buffer->key);
+  //     cur = cur->next;
+  //   }
 
-    // remove minimum value node from list
-    if (least == head) {
-      NODE* temp = head->next;
-      head->next = NULL;
-      head = temp;
-      // printf("\npos: %ld least: %ld buffer: %ld\n", pos->key, least->key, buffer->key);
+  //   // remove minimum value node from list
+  //   if (least == head) {
+  //     NODE* temp = head->next;
+  //     least->next = NULL;
+  //     head = temp;
+  //     // printf("\npos: %ld least: %ld buffer: %ld\n", pos->key, least->key, buffer->key);
+  //   } else {
+  //     buffer->next = least->next;
+  //     least->next = NULL;
+  //     // printf("\npos: %ld least: %ld buffer: %ld\n", pos->key, least->key, buffer->key);
+  //   }
+
+  //   // move minimum value node to sorted list
+  //   if (!sorted_head) {
+  //     sorted_head = least;
+  //     sorted_tail = least;
+  //   } else {
+  //     sorted_tail->next = least;
+  //     sorted_tail = sorted_tail->next;
+  //   }
+  // }
+
+  // way 2 - time 2.3s
+  while (head) {
+    // pick first node from list
+    NODE* temp = head;
+    head = head->next;
+    temp->next = NULL;
+
+    NODE* cur = sorted_head;
+
+    //sorting
+    if (sorted_head) {
+      do {
+        // at the front
+        if (cur->key > temp->key) {
+          temp->next = cur;
+          sorted_head = temp;
+          break;
+        }
+
+        // at the middle of the list
+        if (cur->next && cur->next->key > temp->key) {
+          NODE* next_temp = cur->next;
+          cur->next = temp;
+          temp->next = next_temp;
+          break;
+        }
+
+        // at the rear
+        if (!cur->next) {
+          cur->next = temp;
+          break;
+        }
+        cur = cur->next;
+      } while (cur->key < temp->key);
     } else {
-      buffer->next = least->next;
-      least->next = NULL;
-      // printf("\npos: %ld least: %ld buffer: %ld\n", pos->key, least->key, buffer->key);
+      sorted_head = temp;
     }
-
-    // move minimum value node to sorted list
-    if (sorted_head == NULL) {
-      sorted_head = least;
-      sorted_tail = least;
-    } else {
-      sorted_tail->next = least;
-      sorted_tail = sorted_tail->next;
-    }
-    pos = head;
   }
 
   return sorted_head;
@@ -420,6 +458,8 @@ int main()
 
   /* for file name, max length 1023 including path */
   char infile[1024], outfile[1024];
+  // char infile[1024] = "input/input12345.txt";
+  // char outfile[1024] = "output/list_12345.txt";
   int method;	// which sorting method
 
   // required for mergesort
@@ -456,21 +496,21 @@ int main()
 
     switch ( method ) {
       case 1:	// insertion sort
-	head = list_insertion_sort(head);
-	break;
+        head = list_insertion_sort(head);
+        break;
       case 2:	// merge sort
-	// change linked list to individual list items,
-	// and save their pointers to an array of LHNode* types
-	H = (struct LHNode**) malloc(sizeof(struct LHNode*)*numElements);
-	for (i=0; i<numElements; i++, head=head->next) H[i] = head;
+        // change linked list to individual list items,
+        // and save their pointers to an array of LHNode* types
+        H = (struct LHNode**) malloc(sizeof(struct LHNode*)*numElements);
+        for (i=0; i<numElements; i++, head=head->next) H[i] = head;
 
-	// have to isolate list items later
-	for (i=0; i<numElements; i++) H[i]->next=NULL;
+        // have to isolate list items later
+        for (i=0; i<numElements; i++) H[i]->next=NULL;
 
-	head = list_array_merge_sort(H,numElements);
-	break;
+        head = list_array_merge_sort(H,numElements);
+        break;
       default:
-	break;
+	      break;
     }
 
     // print out results, if not too many

@@ -19,7 +19,7 @@ heavylistsort:
 	./heavy_listsort || ./heavy_listsort.exe
 
 clear:
-	rm -rf heavy_listsort heavy_arraysort list_sort array_sort *.o *.exe
+	rm -rf heavy_listsort heavy_arraysort list_sort array_sort *.o *.exe output/*
 
 help:
 	@echo arraysort : execute sort with array
