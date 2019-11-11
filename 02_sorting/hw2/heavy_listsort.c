@@ -329,7 +329,7 @@ NODE* list_insertion_sort ( NODE* head )
   //   }
   // }
 
-  // way 2 - time 2.3s
+  // way 3 - time 2.3s
   while (head) {
     // pick first node from list
     NODE* temp = head;
@@ -391,7 +391,9 @@ struct LHNode *list_array_merge_sort( struct LHNode **head_array, int N )
     NODE* temp = NULL;
     NODE* temp_cur = NULL;
 
-    // sorting
+    /////////////
+    // sorting //
+    /////////////
     while (left_list && right_list) {
       // printf("left : %ld  right : %ld\n", left_list->key, right_list->key);
       if (left_list->key <= right_list->key) {
@@ -417,19 +419,29 @@ struct LHNode *list_array_merge_sort( struct LHNode **head_array, int N )
       }
     }
 
-    // put the rest data
-    while (left_list) {
-      temp_cur->next = left_list;
-      temp_cur = temp_cur->next;
-      left_list = left_list->next;
-      temp_cur->next = NULL;
-    }
+    ///////////////////////
+    // put the rest data //
+    ///////////////////////
+    // while (left_list) {
+    //   temp_cur->next = left_list;
+    //   temp_cur = temp_cur->next;
+    //   left_list = left_list->next;
+    //   temp_cur->next = NULL;
+    // }
 
-    while (right_list) {
+    // while (right_list) {
+    //   temp_cur->next = right_list;
+    //   temp_cur = temp_cur->next;
+    //   right_list = right_list->next;
+    //   temp_cur->next = NULL;
+    // }
+
+    if (left_list) {
+      temp_cur->next = left_list;
+    }
+    
+    if (right_list) {
       temp_cur->next = right_list;
-      temp_cur = temp_cur->next;
-      right_list = right_list->next;
-      temp_cur->next = NULL;
     }
 
     head_array[i] = temp;
@@ -458,8 +470,6 @@ int main()
 
   /* for file name, max length 1023 including path */
   char infile[1024], outfile[1024];
-  // char infile[1024] = "input/input12345.txt";
-  // char outfile[1024] = "output/list_12345.txt";
   int method;	// which sorting method
 
   // required for mergesort
@@ -508,6 +518,8 @@ int main()
         for (i=0; i<numElements; i++) H[i]->next=NULL;
 
         head = list_array_merge_sort(H,numElements);
+
+        free(H);
         break;
       default:
 	      break;
