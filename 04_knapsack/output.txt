@@ -1,0 +1,11 @@
+========================
+01. knapsack problem
+4 2 11
+========================
+02. knapsack with one item split
+3 2 1x0.5 11.5
+========================
+03. knapsack with one duplicated item
+3 2 1x2 12
+========================
+04. knapsack with two identical knapsacks
