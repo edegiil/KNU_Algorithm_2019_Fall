@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 /////////////////////////////////////////////////////////////
 // common functions for handling arrays
@@ -66,131 +65,49 @@ long *readkeys_textfile( const char infile[], int *pN )
 /////////////////////////////////////////////////////////////
 typedef struct LNode {	// update: item type chagned to long, variable name to key
   long key;
-  struct LNode* next;
+  struct LNode *next;
 } NODE;
 
-typedef struct {
-  int count;
-  NODE* front;
-  NODE* rear;
-  NODE* pos;
-} LIST;
-
-NODE* create_node(long data){
-    NODE* node = (NODE*)malloc(sizeof(NODE));
-    if(!node){
-        return NULL;
-    }
-    node->key = data;
-    node->next = NULL;
-
-    return node;
+struct LNode *generateLNode(long key)
+{
+  struct LNode *tmp;
+  tmp = (struct LNode*) malloc(sizeof(struct LNode));
+  tmp->key = key;
+  tmp->next = NULL;	// bugfix on 190924
+  return tmp;
 }
 
-LIST* create_list() {
-  LIST* list = (LIST*)malloc(sizeof(LIST));
-  if (!list) {
-    return NULL;
+struct LNode *insert_head(struct LNode *head, struct LNode *newPtr)
+{
+  if ( newPtr == NULL ) return head;	// Nothing to add
+  else {
+    newPtr->next = head;
+    return newPtr;
   }
-
-  list->count = 0;
-  list->front = NULL;
-  list->rear = NULL;
-  list->pos = NULL;
-
-  return list;
 }
 
-bool node_insertion(LIST* list, unsigned int index, long data){
-  if(index > list->count || !list){
-    return false;
+struct LNode *insert_next(struct LNode *prev, struct LNode *newPtr)
+{
+  //struct LNode *cur;	// unnecessary 190924 
+  if ( newPtr == NULL ) return prev;	// Nothing to add
+  else if ( prev == NULL ) return insert_head(NULL, newPtr);
+  else {
+    //cur = prev->next;	// unnecessary, so removed, on 190924 
+    //newPtr->next = cur;	// unnecessary, so removed, on 190924 
+    newPtr->next = prev->next;
+    prev->next=newPtr;
+    return newPtr;
   }
-
-  NODE* node = create_node(data);
-  if(list->count == 0){
-    list->front = node;
-    list->rear = node;
-    node->next = NULL;
-    list->count++;
-
-    return true;
-  }
-
-  int iteration = 0;
-  if(index != 0){
-    list->pos = list->front;
-    while(iteration != index){
-      list->pos = list->pos->next;
-      iteration++;
-    }
-    if(index != list->count){
-      node->next = list->pos->next;
-      list->pos->next = node;
-    }else{
-      list->rear->next = node;
-      list->rear = node;
-    }
-  }else{
-    node->next = list->front;
-    list->front = node;
-  }
-    
-  list->count++;
-  return true;
 }
 
-void traverse(LIST* list){
-    int length = list->count;
-    long data;
-    list->pos = list->front;
-    printf("[");
-    for(int i = 0; i < length; i++){
-        data = list->pos->key;
-        list->pos = list->pos->next;
-        printf("%ld ", data);
-    }
-    printf("]\n");
+void traverse(struct LNode *L)
+{
+  struct LNode *cur;
+  printf("[ ");
+  for (cur=L ; cur != NULL ; cur = cur->next )
+    printf("%ld ",cur->key);
+  printf("]\n");
 }
-
-// struct LNode *generateLNode(long key)
-// {
-//   NODE* node = (struct LNode*) malloc(sizeof(NODE));
-//   node->key = key;
-//   node->next = NULL;	// bugfix on 190924
-//   return node;
-// }
-
-// struct LNode *insert_head(struct LNode *head, struct LNode *newPtr)
-// {
-//   if ( newPtr == NULL ) return head;	// Nothing to add
-//   else {
-//     newPtr->next = head;
-//     return newPtr;
-//   }
-// }
-
-// struct LNode *insert_next(struct LNode *prev, struct LNode *newPtr)
-// {
-//   //struct LNode *cur;	// unnecessary 190924 
-//   if ( newPtr == NULL ) return prev;	// Nothing to add
-//   else if ( prev == NULL ) return insert_head(NULL, newPtr);
-//   else {
-//     //cur = prev->next;	// unnecessary, so removed, on 190924 
-//     //newPtr->next = cur;	// unnecessary, so removed, on 190924 
-//     newPtr->next = prev->next;
-//     prev->next=newPtr;
-//     return newPtr;
-//   }
-// }
-
-// void traverse(struct LNode *L)
-// {
-//   struct LNode *cur;
-//   printf("[");
-//   for (cur=L ; cur != NULL ; cur = cur->next )
-//     printf("%ld ",cur->key);
-//   printf("]\n");
-// }
 
 // the below list handling codes are not used.
 // so commented out, but may use them
@@ -244,13 +161,12 @@ struct LNode *lookup_iterative (long x, struct LNode *L)
 }
 */
 
-void free_list_iterative (LIST* L)
+void free_list_iterative (struct LNode *L)
 {
   struct LNode *tmp;
-  L->pos = L->front;
-  while ( L->pos != NULL ) {
-    tmp = L->pos;
-    L->pos = L->pos->next;	// every node access should be done before free()
+  while ( L != NULL ) {
+    tmp = L; 
+    L = L->next;	// every node access should be done before free()
     free(tmp);
   }
 }
@@ -258,29 +174,29 @@ void free_list_iterative (LIST* L)
 /////////////////////////////////////////////////////////////
 // read a linked list from textfile
 /////////////////////////////////////////////////////////////
-LIST* array2linkedlist(long A[], int N)
+struct LNode *array2linkedlist(long A[], int N)
 {
   struct LNode *head, *cur, *prev;
   int i;
 
-  LIST* list = create_list();
-
-  // head = NULL; prev = NULL;
+  head = NULL; prev = NULL;
   for (i=0; i<N; i++) {
-    node_insertion(list, i, A[i]);
+    cur = generateLNode(A[i]);
+    prev = insert_next(prev,cur);
+    if ( head == NULL ) head = prev;
   }
   
-  return list;
+  return head;
 }
 
-LIST* readkeys_textfile_linkedlist( const char infile[], int *pN )
+struct LNode *readkeys_textfile_linkedlist( const char infile[], int *pN )
   // read text file of integers:
   // number_of_intergers integer1 integer2 ...
   // then convert it to a linked list 
   // returns a list list of struct LNode, with its size stored in
   // the memory indicated by integer pointer variable pN
 {
-  LIST* head;
+  struct LNode *head;
   long *A;
 
   A = readkeys_textfile(infile, pN);
@@ -293,7 +209,7 @@ LIST* readkeys_textfile_linkedlist( const char infile[], int *pN )
 }
 
 void savekeys_textfile_linkedlist( const char outfile[],
-    LIST* head, int N )
+    struct LNode *head, int N )
   // save the given linked list to file whose name given by outfile[]
 {
   FILE *fp;
@@ -312,9 +228,7 @@ void savekeys_textfile_linkedlist( const char outfile[],
   else {
     // save number of elements
     fprintf(fp, "%d\n",N);
-    for (head->pos = head->front; head->pos; head->pos = head->pos->next ) {
-      fprintf(fp, "%ld ", head->pos->key);
-    }
+    for (; head; head = head->next ) fprintf(fp, "%ld ", head->key);
     fprintf(fp,"\n");
     fclose(fp);
   }
@@ -326,98 +240,122 @@ void savekeys_textfile_linkedlist( const char outfile[],
 /////////////////////////////////////////////////////////////
 /* GJ: may add any additional functions */
 
-void swap_node(LIST* list, NODE* former_node, NODE* latter_node) {
-  int iter = 0;
-  list->pos = list->front;
+NODE* list_insertion_sort ( NODE* head )
+{
+  struct LNode* sorted_head = NULL;
+  struct LNode* sorted_tail = NULL;
 
-  if (former_node->next == latter_node) {
-    former_node->next = latter_node->next;
-    latter_node->next = former_node;
+  NODE* pos = head;
+  NODE* temp;
 
-    if (former_node == list->front) {
-      list->front = latter_node;
+  while (pos != NULL) {
+    NODE* cur = head;
+    NODE* least = head;
+    NODE* buffer = head;
+
+    // find minimum value node
+    while (cur != NULL) {
+      if (cur->key < least->key) {
+        least = cur;
+        buffer = temp;
+      }
+      if (cur->next && cur->next->key < least->key) {
+        temp = cur;
+      }
+      // printf("cur: %ld least: %ld buffer: %ld\n", cur->key, least->key, buffer->key);
+      cur = cur->next;
+    }
+
+    // remove minimum value node from list
+    if (least == head) {
+      NODE* temp = head->next;
+      head->next = NULL;
+      head = temp;
+      // printf("\npos: %ld least: %ld buffer: %ld\n", pos->key, least->key, buffer->key);
     } else {
-      while(iter < list->count) {
-        if (list->pos->next == former_node) {
-          list->pos->next = latter_node;
-          break;
-        }
-        list->pos = list->pos->next;
-        iter++;
-      }
+      buffer->next = least->next;
+      least->next = NULL;
+      // printf("\npos: %ld least: %ld buffer: %ld\n", pos->key, least->key, buffer->key);
     }
-  } else {
-    while(iter < list->count) {
-      if (list->pos->next == latter_node) {
-        list->pos->next = former_node;
-        break;
-      }
-      list->pos = list->pos->next;
-      iter++;
-    }
-    
-    NODE* temp = former_node->next;
-    former_node->next = latter_node->next;
-    latter_node->next = temp;
 
-    iter = 0;
-    list->pos = list->front;
-
-    if (former_node == list->front) {
-      list->front = latter_node;
+    // move minimum value node to sorted list
+    if (sorted_head == NULL) {
+      sorted_head = least;
+      sorted_tail = least;
     } else {
-      while(iter < list->count) {
-        if (list->pos->next == former_node) {
-          list->pos->next = latter_node;
-          break;
-        }
-        list->pos = list->pos->next;
-        iter++;
-      }
+      sorted_tail->next = least;
+      sorted_tail = sorted_tail->next;
     }
+    pos = head;
   }
-  list->pos = list->pos->next;
+
+  return sorted_head;
 }
-
-void list_insertion_sort(LIST* list) {
-  int i, j;
-  NODE* pos = list->front;
-  NODE* least = NULL;
-
-  for (i = 1; i < list->count; i++) {
-    NODE* cursor = pos->next;
-    least = pos;
-
-    for (j = 1; j <= list->count - i; j++) {
-      if (least->key > cursor->key) {
-        least = cursor;
-      }
-      cursor = cursor->next;
-    }
-
-    // printf("pos: %d, least: %d\n", pos->key, least->key);
-    if (pos != least) {
-      swap_node(list, pos, least);
-      pos = least;
-    }
-    pos = pos->next;
-  }
-}
-
-// struct LNode *list_insertion_sort ( struct LNode *head )
-// {
-//   /* GJ: FILL */
-// }
 
 
 /////////////////////////////////////////////////////////////
 // linked list merge sort
 /////////////////////////////////////////////////////////////
 /* GJ: may add any additional functions */
-
-void list_array_merge_sort( struct LNode **head_array, int N )
+struct LNode *list_array_merge_sort( struct LNode **head_array, int N )
 {
-  /* GJ: FILL */
+  int mid = N / 2;
+  NODE* left_list;
+  for (int i = 0; i < mid; i++) {
+    left_list = head_array[i];
+    NODE* right_list = head_array[N - 1 - i];
+    NODE* temp = NULL;
+    NODE* temp_cur = NULL;
+
+    // sorting
+    while (left_list && right_list) {
+      if (left_list->key <= right_list->key) {
+        if (!temp) {
+          temp = left_list;
+          temp_cur = temp;
+        } else {
+          temp_cur->next = left_list;
+          temp_cur = temp_cur->next;
+        }
+        left_list = left_list->next;
+        temp_cur->next = NULL;
+      } else {
+        if (!temp) {
+          temp = right_list;
+          temp_cur = temp;
+        } else {
+          temp_cur->next = right_list;
+          temp_cur = temp_cur->next;
+        }
+        right_list = right_list->next;
+        temp_cur->next = NULL;
+      }
+    }
+
+    // put the rest data
+    while (left_list) {
+      temp_cur->next = left_list;
+      temp_cur = temp_cur->next;
+      left_list = left_list->next;
+      temp_cur->next = NULL;
+    }
+
+    while (right_list) {
+      temp_cur->next = right_list;
+      temp_cur = temp_cur->next;
+      right_list = right_list->next;
+      temp_cur->next = NULL;
+    }
+
+    head_array[i] = temp;
+  }
+
+  int length = N / 2 + N % 2;
+
+  if (length != 1) {
+    left_list = list_array_merge_sort(head_array, length);
+  }
+  return head_array[0];
 }
 
 /////////////////////////////////////////////////////////////
@@ -432,12 +370,10 @@ void list_array_merge_sort( struct LNode **head_array, int N )
 int main()
 {
   int i, numElements;
-  LIST* head;
+  struct LNode *head;
 
   /* for file name, max length 1023 including path */
-  // char infile[1024], outfile[1024];
-  char infile[1024] = "input/input58.txt";
-  char outfile[1024] = "output/heavy_arraysort-merge-58.txt";
+  char infile[1024], outfile[1024];
   int method;	// which sorting method
 
   // required for mergesort
@@ -445,9 +381,9 @@ int main()
 
   /* file name given by keyboard */
   printf("Input file name? ");
-  // scanf("%s",infile);
+  scanf("%s",infile);
   printf("Output file name? ");
-  // scanf("%s",outfile);
+  scanf("%s",outfile);
 
   printf("Method (1: insertion, 2: merge)? ");
   scanf("%d",&method);
@@ -467,21 +403,21 @@ int main()
 
     switch ( method ) {
       case 1:	// insertion sort
-	list_insertion_sort(head);
-	break;
+        head = list_insertion_sort(head);
+        break;
       case 2:	// merge sort
-	// change linked list to individual list items,
-	// and save their pointers to an array of LNode* types
-	// H = (struct LNode**) malloc(sizeof(struct LNode*)*numElements);
-	// for (i=0; i<numElements; i++, head=head->next) H[i] = head;
+        // change linked list to individual list items,
+        // and save their pointers to an array of LNode* types
+        H = (struct LNode**) malloc(sizeof(struct LNode*)*numElements);
+        for (i=0; i<numElements; i++, head=head->next) H[i] = head;
 
-	// // have to isolate list items later
-	// for (i=0; i<numElements; i++) H[i]->next=NULL;
+        // have to isolate list items later
+        for (i=0; i<numElements; i++) H[i]->next=NULL;
 
-	// head = list_array_merge_sort(H,numElements);
-	break;
+        head = list_array_merge_sort(H,numElements);
+        break;
       default:
-	break;
+      	break;
     }
 
     // print out results, if not too many
