@@ -25,6 +25,12 @@ typedef struct {
   NODE *pos;
 } LIST;
 
+typedef struct buffer {
+  int x;
+  int y;
+  struct buffer *next;
+} BUFFER;
+
 /* GLOBAL DEFINITIONS */
 #define MAX_STRING_LENGTH 1024
 
@@ -36,6 +42,8 @@ bool append_node(LIST *list, int data);
 double get_distance(int former_x, int former_y, int latter_x, int latter_y);
 void free_list(LIST *list);
 void free_map(LIST *map[]);
+BUFFER* create_buffer(int x, int y);
+BUFFER* save_at_buffer(BUFFER* buffer, int x, int y);
 
 /* ASSIGNMENT */
 void visit_maximum_points(FILE *fp, LIST *map[], int fuel_limit) {
@@ -45,7 +53,9 @@ void visit_maximum_points(FILE *fp, LIST *map[], int fuel_limit) {
   int index = 0;
   int former_x = 0, former_y = 0;
 
-  fprintf(fp, "total fuel : %d\n", fuel_limit);
+  fprintf(fp, "%d ", fuel_limit);
+
+  BUFFER *buffer = NULL;
 
   while (index <= 100) {
     int latter_x, latter_y;
@@ -71,7 +81,7 @@ void visit_maximum_points(FILE *fp, LIST *map[], int fuel_limit) {
         fuel_check -= d;
         former_x = latter_x;
         former_y = latter_y;
-        fprintf(fp, "%d %d\n", former_x, former_y);
+        buffer = save_at_buffer(buffer, former_x, former_y);
       }
     } else {
       map[index]->pos = map[index]->front;
@@ -92,7 +102,7 @@ void visit_maximum_points(FILE *fp, LIST *map[], int fuel_limit) {
           fuel_check -= d;
           former_x = latter_x;
           former_y = latter_y;
-          fprintf(fp, "%d %d\n", former_x, former_y);
+          buffer = save_at_buffer(buffer, former_x, former_y);
         }
 
         map[index]->pos = map[index]->pos->next;
@@ -101,15 +111,23 @@ void visit_maximum_points(FILE *fp, LIST *map[], int fuel_limit) {
     index++;
   }
   
-  fprintf(fp, "total distance : %.1f\n", distance);
-  fprintf(fp, "===========\n");
+  fprintf(fp, "%.1f\n", distance);
+
+  while (buffer) {
+    BUFFER *tmp = buffer;
+    fprintf(fp, "%d %d\n", buffer->x, buffer->y);
+    tmp = buffer;
+    buffer = buffer->next;
+    free(tmp);
+  }
+
   fprintf(fp, "\n");
 }
 
 /* MAIN */
 int main() {
   char infile[MAX_STRING_LENGTH];
-  char outfile[MAX_STRING_LENGTH] = "output.txt";
+  char outfile[MAX_STRING_LENGTH];
   char line[MAX_STRING_LENGTH];
   FILE *fp;
 
@@ -118,6 +136,14 @@ int main() {
   fgets(line, MAX_STRING_LENGTH, stdin);
    if (strlen(line) == 0 || sscanf(line, "%s", infile) != 1) {
     fprintf(stderr, "cannot read input file name from '%s'\n", line);
+    exit(0);
+  }
+
+  memset(line, 0, sizeof(char) * MAX_STRING_LENGTH);
+  fprintf(stderr,"Output file name? ");
+  fgets(line, MAX_STRING_LENGTH, stdin);
+   if (strlen(line) == 0 || sscanf(line, "%s", outfile) != 1) {
+    fprintf(stderr, "cannot read output file name from '%s'\n", line);
     exit(0);
   }
 
@@ -227,5 +253,30 @@ void free_map(LIST *map[]) {
     if (map[i]) {
       free_list(map[i]);
     }
+  }
+}
+
+BUFFER* create_buffer(int x, int y) {
+  BUFFER* buffer = (BUFFER*)malloc(sizeof(BUFFER));
+  if(!buffer) return NULL;
+
+  buffer->x = x;
+  buffer->y = y;
+  buffer->next = NULL;
+
+  return buffer;
+}
+
+BUFFER* save_at_buffer(BUFFER* buffer, int x, int y) {
+  if (!buffer) {
+    buffer = create_buffer(x, y);
+    return buffer;
+  } else {
+    BUFFER *pos = buffer;
+    while (pos->next) {
+      pos = pos->next;
+    }
+    pos->next = create_buffer(x, y);
+    return buffer;
   }
 }
